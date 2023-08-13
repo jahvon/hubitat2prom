@@ -86,6 +86,8 @@ def metrics():
                                 attrib["currentValue"] = 4
                         case "water":
                             attrib["currentValue"] = transform_binary_values(attrib["currentValue"])
+                        case "contact":
+                            attrib["currentValue"] = transform_binary_values(attrib["currentValue"])
 
                     # Sanitise the device name as it will appear in the label
                     device_name = sanitize_device_name(device['label'])
