@@ -13,7 +13,7 @@ app = Flask(__name__)
 try:
     base_uri = os.environ["HE_URI"]
     access_token = os.environ["HE_TOKEN"]
-    collected_metrics = os.getenv("HE_METRICS", "battery,humidity,illuminance,level,switch,temperature,power,energy").split(",")
+    collected_metrics = os.getenv("HE_METRICS", " battery,contact,humidity,illuminance,level,switch,temperature,energy,heatingSetpoint,thermostatSetpoint,thermostatOperatingState,thermostatMode,water,contact").split(",")
 except KeyError as e:
     print(f"Could not read the environment variable - {e}")
 
@@ -52,22 +52,44 @@ def metrics():
                 # Does it have a "proper" value?
                 if attrib["currentValue"] is not None:
                     # If it's a switch, then change from text to binary values
-                    if attrib["name"] == "switch":
-                        if attrib["currentValue"] == "on":
-                            attrib["currentValue"] = 1
-                        else:
-                            attrib["currentValue"] = 0
-                    if attrib["name"] == "power":
-                        if attrib["currentValue"] == "on":
-                            attrib["currentValue"] = 1
-                        elif attrib["currentValue"] == "off":
-                            attrib["currentValue"] = 0
-                        else:
-                            attrib["currentValue"] = attrib["currentValue"]
+
+                    match attrib["name"]:
+                        case "switch":
+                            attrib["currentValue"] = transform_binary_values(attrib["currentValue"])
+                        case "power":
+                            attrib["currentValue"] = transform_binary_values(attrib["currentValue"])
+                        case "thermostatOperatingState":
+                            if attrib["currentValue"] == "heating":
+                                attrib["currentValue"] = 0
+                            elif attrib["currentValue"] == "pending cool":
+                                attrib["currentValue"] = 1
+                            elif attrib["currentValue"] == "pending heat":
+                                attrib["currentValue"] = 2
+                            elif attrib["currentValue"] == "vent economizer":
+                                attrib["currentValue"] = 3
+                            elif attrib["currentValue"] == "idle":
+                                attrib["currentValue"] = 4
+                            elif attrib["currentValue"] == "cooling":
+                                attrib["currentValue"] = 5
+                            elif attrib["currentValue"] == "fan only":
+                                attrib["currentValue"] = 6
+                        case "thermostatMode":
+                            if attrib["currentValue"] == "auto":
+                                attrib["currentValue"] = 0
+                            elif attrib["currentValue"] == "off":
+                                attrib["currentValue"] = 1
+                            elif attrib["currentValue"] == "heat":
+                                attrib["currentValue"] = 2
+                            elif attrib["currentValue"] == "emergency heat":
+                                attrib["currentValue"] = 3
+                            elif attrib["currentValue"] == "cool":
+                                attrib["currentValue"] = 4
+                        case "water":
+                            attrib["currentValue"] = transform_binary_values(attrib["currentValue"])
 
                     # Sanitise the device name as it will appear in the label
-                    device_name = device_details['label'].lower().replace(' ','_').replace('-','_')
-                    # Sanitise the metric name 
+                    device_name = sanitize_device_name(device['label'])
+                    # Sanitise the metric name
                     metric_name = attrib['name'].lower().replace(' ','_').replace('-','_')
                     # Create the dict that holds the data
                     device_attributes.append({
@@ -83,5 +105,14 @@ def metrics():
     response.mimetype = "text/plain"
     return response
 
+def sanitize_device_name(device_name):
+    return device_name.lower().replace(' ','_').replace('-','_').strip('_')
 
+def transform_binary_values(value):
+    if value == "on" or value == "open" or value == "active" or value == "present" or value == "unlocked" or value == "wet":
+        return 1
+    elif value == "off" or value == "closed" or value == "inactive" or value == "not present" or value == "locked" or value == "dry":
+        return 0
+    else:
+        return value
 

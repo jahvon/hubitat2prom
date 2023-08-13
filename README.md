@@ -1,6 +1,6 @@
 # hubitat2prom
 
-This application runs in a docker container, talks to the 
+This application runs in a docker container, talks to the
 [Hubitat Maker API](https://docs.hubitat.com/index.php?title=Maker_API)
 and returns the metrics in a format suitable for consumption by
  [Prometheus](https://prometheus.io)
@@ -48,7 +48,7 @@ EOF
 $ docker-compose run --rm hubitat2prom
 ```
 
-This will start the container listening on your local machine on port 5000, and you can visit 
+This will start the container listening on your local machine on port 5000, and you can visit
 [http://localhost:5000/metrics](http://localhost:5000/metrics) to confirm that the metrics are coming through.
 
 You can additionally visit
@@ -57,6 +57,11 @@ configuration infomation and check the connection status with the Hubitat API.
 
 Once you've confirmed this, you can move on to configuring Prometheus.
 
+## Build Image
+
+```
+docker buildx build --push --platform linux/amd64 -t jahvond/hubitat2prom:latest .
+```
 ## Local Installation
 
 If you want to run this service without installing from Docker, then the steps
