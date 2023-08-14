@@ -43,6 +43,7 @@ def info():
 def metrics():
     devices = get_devices()
     device_attributes = []
+    metric_id_lookup_dict = dict()
 
     for device in devices.json():
         device_details = requests.get(f"{base_uri}/{device['id']}?access_token={access_token}").json()
@@ -51,7 +52,12 @@ def metrics():
             if attrib["name"] in collected_metrics:
                 # Does it have a "proper" value?
                 if attrib["currentValue"] is not None:
-                    # If it's a switch, then change from text to binary values
+                    # Check if we have already collected this metric for this device
+                    metric_id = device['id'] + attrib['name']
+                    if metric_id in metric_id_lookup_dict:
+                        continue
+                    else:
+                        metric_id_lookup_dict[metric_id] = True
 
                     match attrib["name"]:
                         case "switch":
