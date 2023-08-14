@@ -13,7 +13,7 @@ app = Flask(__name__)
 try:
     base_uri = os.environ["HE_URI"]
     access_token = os.environ["HE_TOKEN"]
-    collected_metrics = os.getenv("HE_METRICS", " battery,contact,humidity,illuminance,level,switch,temperature,energy,heatingSetpoint,thermostatSetpoint,thermostatOperatingState,thermostatMode,water,contact").split(",")
+    collected_metrics = os.getenv("HE_METRICS", "battery,contact,humidity,illuminance,level,switch,temperature,energy,heatingSetpoint,thermostatSetpoint,thermostatOperatingState,thermostatMode,water,contact").split(",")
 except KeyError as e:
     print(f"Could not read the environment variable - {e}")
 
